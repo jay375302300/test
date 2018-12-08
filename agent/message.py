@@ -1,0 +1,44 @@
+import uuid
+import socket
+import ipaddress
+import os
+import netifaces
+
+def con_addr():
+    addrlist=[]
+    for iface in netifaces.interfaces(): #遍历各种类型端口
+        print(iface)
+        if 2 in netifaces.ifaddresses(iface):
+            addr=ipaddress.ip_address(netifaces.ifaddresses(iface)[2][0]['addr'])
+            if addr.is_loopback or addr.is_multicast or addr.is_link_local:
+                continue
+            addrlist.append(str(addr))
+    return addrlist
+class Message:
+    def __init__(self,uuid_path):
+        if os.path.exists(uuid_path):
+            with open(uuid_path) as f:
+                self.uuid=f.readline()
+        else:
+            self.uuid=uuid.uuid4().hex
+            with open(uuid_path,mode='w') as f:
+                f.write(self.uuid)
+    def reg(self):
+        return {
+            'type':'reg',
+            'payload':{
+                'id':self.uuid,
+                'host':socket.gethostname(),
+                'ip_addr':con_addr()
+            }
+        }
+    def heart_beat(self):
+        return {
+            'type':'heartbeat',
+            'payload':{
+                'id':self.uuid,
+                'host':socket.gethostname(),
+                'ip_addr':con_addr(),
+                'state':0
+            }
+        }

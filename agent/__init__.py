@@ -1,11 +1,17 @@
-from agent.config import CONNURL
+import zerorpc
+from agent.config import CONNURL,UUID_PATH
 from agent.commer import Commanager
+from agent.message import Message
+import threading
 class Agent:
-    def __init__(self,msg):
-        self.msg=msg
+    def __init__(self):
+        self.msg=Message(UUID_PATH)
         self.comm=Commanager(self.msg)
-
     def start(self):
-        print(self.comm.sendmsg())
+        while not threading.Event().wait(3):
+            try:
+                self.comm.sendmsg()
+            except Exception as e:
+                self.comm.shutdown()
     def stop(self):
         pass
